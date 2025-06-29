@@ -1,4 +1,10 @@
-# Firmus
+# Firmus-SDK
+
+**Current stable version: v1.3.3**
+
+**Runs optimally (and tested) on esp32 boards v3.1.0**
+
+---
 
 ## 📘 Introduction
 

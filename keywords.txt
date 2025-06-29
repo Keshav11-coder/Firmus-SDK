@@ -1,0 +1,46 @@
+# Library namespace
+Firmus	KEYWORD1
+mpu6050	KEYWORD1
+
+# Base
+Drone	KEYWORD1
+IRigidModel	KEYWORD1
+IAttitude	KEYWORD1
+IVelocity	KEYWORD1
+IPosition	KEYWORD1
+IOrchestrator	KEYWORD1
+
+RigidModel	KEYWORD1
+Orchestrator	KEYWORD1
+
+# Cascade Control
+Cascade	KEYWORD1
+Attitude	KEYWORD1
+Velocity	KEYWORD1
+Position	KEYWORD1
+
+# Units etc
+Torque	KEYWORD1
+Vector3	KEYWORD1
+
+# RigidModel
+#setMomentArm	KEYWORD2
+#setActuatorAngles	KEYWORD2
+#setAllocationMatrix	KEYWORD2
+#setInertiaMatrix	KEYWORD2
+#setMass	KEYWORD2
+#setOperatingVoltage	KEYWORD2
+#setMotorKv	KEYWORD2
+#setPropellerDiameter	KEYWORD2
+#setPropellerPitch	KEYWORD2
+
+# Cascade::Attitude
+#configureOrientationGains	KEYWORD2
+#configureRateGains	KEYWORD2
+#setControlFlags	KEYWORD2
+#updateMeasuredOrientation	KEYWORD2
+#updateMeasuredRate	KEYWORD2
+
+# Cascade::Orchestrator
+#useModel	KEYWORD2
+#useAttitudeInterface	KEYWORD2

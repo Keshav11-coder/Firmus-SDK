@@ -1,8 +1,15 @@
 # Firmus-SDK
 
 **Current stable version: v1.3.3**
+**Pre-Dev version: v1.3.4**
 
 **Runs optimally (and tested) on esp32 boards v3.1.0**
+
+## **Development Features Overview**
+
+The current (stable) release (v1.3.3) runs efficiently on ESP32 boards, but leans more towards support for Cascaded Control systems. For control systems that are more advanced (and thus require a generalized architecture), the `Attitude` — `Velocity` — `Position` -enforced interface is too restricting.
+
+To solve this problem, the base classes (`IAttitude`, `IVelocity`, etc...) will **not** be replaced, but complemented by a set of new classes (e.g. `IControlLayer`) which aim to improve and generalize the control architecture for more high-performance control systems, such as MPC, LQR, NN, and more. A template for these advanced systems will be provided by default in future major versions, but the foundation needs to be appropriate for that to happen. The version `1.3.4` will mainly focus on this feature.
 
 ---
 

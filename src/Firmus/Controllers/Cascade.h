@@ -26,6 +26,204 @@ struct Vector3; // Forward declaration of Vector3
 
 namespace Cascade
 {
+    class FrameCorrectionStrategy : public ICourseCorrectionStrategy
+    {
+    private:
+        PID_filtered X, Y, Z;
+
+        static float error(float x_hat, float x)
+        {
+            float err = x_hat - x;
+            return err > M_PI ? err - 2 * M_PI : (err < -M_PI ? err + 2 * M_PI : err);
+        }
+
+    public:
+        FrameCorrectionStrategy(
+            float kpx = 0, float kix = 0, float kdx = 0, float kfx = 10.0f,
+            float kpy = 0, float kiy = 0, float kdy = 0, float kfy = 10.0f,
+            float kpz = 0, float kiz = 0, float kdz = 0, float kfz = 10.0f)
+        {
+            X.gains(kpx, kix, kdx, kfx);
+            Y.gains(kpy, kiy, kdy, kfy);
+            Z.gains(kpz, kiz, kdz, kfz);
+        }
+
+        Vector3 compute(const Vector3 &target, const Vector3 &measured, float dt) override
+        {
+            float err_x = (target.x - measured.x);
+            float err_y = (target.y - measured.y);
+            float err_z = error(target.z, measured.z);
+
+            return Vector3(
+                X.compute(err_x, dt),
+                Y.compute(err_y, dt),
+                Z.compute(err_z, dt));
+        }
+
+        void reset() override
+        {
+            X.reset();
+            Y.reset();
+            Z.reset();
+        }
+    };
+
+    // Attitude Controller Implementation from IControlLayer
+    class FrameOrientationControlLayer : public IControlLayer
+    {
+    private:
+        ICourseCorrectionStrategy *correctionStrategy = nullptr;
+
+    public:
+        // Use a correction strategy for control
+        IControlLayer &setCorrectionStrategy(ICourseCorrectionStrategy *strategy) override
+        {
+            correctionStrategy = strategy;
+            return *this;
+        }
+
+        // Process the input snapshot and return a new snapshot
+        Snapshot process(const Snapshot &state, const Snapshot &target, float dt) override
+        {
+            if (!correctionStrategy)
+            {
+                // If no correction strategy is set, return current state with updated timestamp
+                Snapshot state_copy = state;     // Copy the state to avoid modifying the original
+                state_copy.timestamp = millis(); // Update timestamp
+                return state_copy;
+            }
+
+            auto ang_vel_hat = correctionStrategy->compute(target.orientation, state.orientation, dt);
+
+            Snapshot updated = target;
+            updated.angular_velocity = ang_vel_hat;
+            updated.timestamp = millis();
+            return updated;
+        }
+
+        // Reset the controller state
+        void reset() override
+        {
+            if (correctionStrategy)
+                correctionStrategy->reset();
+        }
+    };
+
+    class FrameRateControlLayer : public IControlLayer
+    {
+    private:
+        ICourseCorrectionStrategy *correctionStrategy = nullptr;
+
+    public:
+        // Use a correction strategy for control
+        IControlLayer &setCorrectionStrategy(ICourseCorrectionStrategy *strategy) override
+        {
+            correctionStrategy = strategy;
+            return *this;
+        }
+
+        // Process the input snapshot and return a new snapshot
+        Snapshot process(const Snapshot &state, const Snapshot &target, float dt) override
+        {
+            if (!correctionStrategy)
+            {
+                // If no correction strategy is set, return current state with updated timestamp
+                Snapshot state_copy = state;     // Copy the state to avoid modifying the original
+                state_copy.timestamp = millis(); // Update timestamp
+                return state_copy;
+            }
+
+            auto ang_acc_hat = correctionStrategy->compute(target.angular_velocity, state.angular_velocity, dt);
+
+            Snapshot updated = target;
+            updated.angular_acceleration = ang_acc_hat;
+            updated.timestamp = millis();
+            return updated;
+        }
+
+        // Reset the controller state
+        void reset() override
+        {
+            if (correctionStrategy)
+                correctionStrategy->reset();
+        }
+    };
+
+    class FrameControlOrchestrator : public IControlOrchestrator
+    {
+    private:
+        IControlLayer **layers = nullptr;
+        size_t count = 0;
+        size_t capacity = 0;
+
+        IRigidModel *model = nullptr;
+
+    public:
+        FrameControlOrchestrator(size_t initial_capacity = 4)
+            : capacity(initial_capacity)
+        {
+            layers = new IControlLayer *[capacity];
+        }
+
+        ~FrameControlOrchestrator()
+        {
+            delete[] layers;
+        }
+
+        // Use a model for control
+        IControlOrchestrator &useModel(IRigidModel *model_) override
+        {
+            model = model_;
+            return *this;
+        }
+
+        // You add a control layer from highest layer to lowest, e.g. position -> velocity -> acceleration -> orientation -> rate. The order determines the flow of data IN THIS IMPLEMENTATION.
+        IControlOrchestrator &addControlLayer(IControlLayer *layer) override
+        {
+            if (count >= capacity)
+            {
+                return *this; // Prevent adding more layers than capacity
+            }
+            layers[count++] = layer;
+            return *this;
+        }
+
+        IControlOrchestrator &removeControlLayer(IControlLayer *layer) override
+        {
+            for (size_t i = 0; i < count; ++i)
+            {
+                if (layers[i] == layer)
+                {
+                    for (size_t j = i; j < count - 1; ++j)
+                        layers[j] = layers[j + 1];
+                    --count;
+                    layers[count] = nullptr;
+                    return *this; // TODO add warnings
+                }
+            }
+            return *this;
+        }
+
+        Snapshot process(const Snapshot &state, const Snapshot &target_initial, float dt) override
+        {
+            Snapshot target = target_initial;
+
+            for (size_t i = 0; i < count; ++i)
+            {
+                // Target gets modified per layer and sent back for the next layer
+                target = layers[i]->process(state, target, dt); // Returns "this is what you have to do to the state" for the next layer (e.g. new target)
+            }
+
+            // Assuming results are angular accelerations:
+            Vector3 torque = model ? model->computeRequiredTorque(state.angular_velocity, target.angular_acceleration) : state.torque;
+
+            target.torque = torque;      // Update the torque in the result snapshot
+            target.timestamp = millis(); // Update the timestamp to the current time
+
+            return target;
+        }
+    };
+
     class Attitude : public IAttitude
     {
     private:

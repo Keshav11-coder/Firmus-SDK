@@ -15,11 +15,48 @@
 
 #include "../Models/Rigid.h" // Include the RigidModel class for model operations
 
-// General Frame Vector (Vector3)
-struct Vector3; // Forward declaration of Vector3 
+// General Frame data containers
+struct Vector3;  // Forward declaration of Vector3
+struct Snapshot; // Forward declaration of Snapshot
+
+// Frame-level control interfaces (Outputs Snapshot)
+
+// ICourseCorrectionStrategy can be used in all kinds of frame-level control systems, it's clear and can have different policies or implementations (PID, LQR, MPCPolicy, etc...)
+class ICourseCorrectionStrategy
+{
+public:
+    virtual ~ICourseCorrectionStrategy() = default; // Virtual destructor for cleanup
+
+    virtual Vector3 compute(const Vector3 &target, const Vector3 &measured, float dt) = 0; // Compute the correction based on target and measured values
+    virtual void reset() = 0;                                                              // Reset the controller state
+};
+
+class IControlLayer
+{
+public:
+    virtual ~IControlLayer() = default; // Virtual destructor for cleanup
+
+    virtual IControlLayer &setCorrectionStrategy(ICourseCorrectionStrategy *strategy) = 0; // Use a correction strategy for control
+    virtual Snapshot process(const Snapshot &state, const Snapshot &target, float dt) = 0; // Process the input snapshot and return a new snapshot
+
+    virtual void reset() = 0; // Reset the controller state
+};
+
+class IControlOrchestrator
+{
+public:
+    virtual ~IControlOrchestrator() = default;
+
+    virtual IControlOrchestrator &addControlLayer(IControlLayer *layer) = 0;
+    virtual IControlOrchestrator &removeControlLayer(IControlLayer *layer) = 0;
+
+    virtual IControlOrchestrator &useModel(IRigidModel *model) = 0; // Use a model for control
+
+    virtual Snapshot process(const Snapshot &state, const Snapshot &target, float dt) = 0;
+};
 
 // General PID data structure
-struct PIDGains
+[[deprecated("These interfaces are legacy Cascade-centric abstractions. Use the new IControlLayer and IResolver framework for flexible, modular, and extensible control pipelines.")]] struct PIDGains
 {
     float kp; // Proportional gain
     float ki; // Integral gain
@@ -29,7 +66,7 @@ struct PIDGains
 };
 
 // [Output-> desired angular acceleration]
-class IAttitude
+[[deprecated("These interfaces are legacy Cascade-centric abstractions. Use the new IControlLayer and IResolver framework for flexible, modular, and extensible control pipelines.")]] class IAttitude
 {
 public:
     struct IAttitudeFlags
@@ -75,7 +112,7 @@ public:
 };
 
 // [To Do] [Output-> desired orientation]
-class IVelocity
+[[deprecated("These interfaces are legacy Cascade-centric abstractions. Use the new IControlLayer and IResolver framework for flexible, modular, and extensible control pipelines.")]] class IVelocity
 {
 public:
     struct IVelocityFlags
@@ -113,7 +150,7 @@ public:
 };
 
 // [To Do] [Output-> desired velocity]
-class IPosition
+[[deprecated("These interfaces are legacy Cascade-centric abstractions. Use the new IControlLayer and IResolver framework for flexible, modular, and extensible control pipelines.")]] class IPosition
 {
 public:
     struct IPositionFlags
@@ -143,7 +180,7 @@ public:
     virtual void reset() = 0;
 };
 
-class IOrchestrator
+[[deprecated("These interfaces are legacy Cascade-centric abstractions. Use the new IControlLayer and IResolver framework for flexible, modular, and extensible control pipelines.")]] class IOrchestrator
 {
 public:
     virtual IOrchestrator &useAttitudeInterface(IAttitude *attitudeCtrl) = 0;

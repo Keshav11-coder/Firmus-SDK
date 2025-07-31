@@ -82,4 +82,9 @@ public:
 
         return output; // Return the filled output structure
     }
+
+    void setModel(IRigidModel *model_)
+    {
+        model = model_;
+    }
 };

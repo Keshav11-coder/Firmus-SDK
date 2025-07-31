@@ -27,6 +27,25 @@ struct Vector3
     Vector3(float x_ = 0, float y_ = 0, float z_ = 0) : x(x_), y(y_), z(z_) {}
 };
 
+// Frame State at time point -> Snapshot
+struct Snapshot
+{
+    // Kinematics & Dynamics
+    Vector3 position;             // Position in meters (m) in 3D space. Intended as a relative position from origin (launch point)
+    Vector3 velocity;             // (Linear) Velocity (m/s) in 3D space
+    Vector3 acceleration;         // (Linear) Acceleration (m/s^2) in 3D space
+    Vector3 orientation;          // Orientation in 3D space (e.g. Euler angles or radians, implementation may vary)
+    Vector3 angular_velocity;     // Angular velocity (rad/s) in 3D space
+    Vector3 angular_acceleration; // Angular acceleration (rad/s^2) in 3D space
+
+    // Timeseries & loop info
+    uint64_t timestamp; // Timestamp in milliseconds (ms) since epoch (e.g. system start or launch time)
+    uint64_t loop_freq; // Loop frequency at a specific point in Hz
+
+    // To keep track of end-control data, include torque
+    Vector3 torque; // Torque in Newton-meters (Nm) in 3D space
+};
+
 // Namespace Firmus
 namespace Firmus
 {
@@ -77,7 +96,7 @@ namespace Firmus
 
         failsafe_system failsafe;
     };
-    
+
     // BENCHED FOR NOW
     // template <typename Model, typename... Modules>
     // class Drone

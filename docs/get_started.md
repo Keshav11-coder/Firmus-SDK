@@ -58,12 +58,12 @@ While you can clone this repository via the terminal, the best way to add it to 
 - **Tools > Port:** Select the correct COM port
 
 ### 4. Open Example Project
-- Go to `Firmus-SDK/examples/QuadCascadeCtrlExt_RM4_v2/`
-- Open `QuadCascadeCtrlExt_RM4_v2.ino`
+- Go to `Firmus-SDK/examples/BasicBodyAttitude/`
+- Open `BasicBodyAttitude.ino`
 
 or
 
-- **File > Examples > Firmus > QuadCascadeCtrlExt_RM4_v2** in Arduino IDE
+- **File > Examples > Firmus > BasicBodyAttitude** in Arduino IDE
 
 ---
 
@@ -71,25 +71,25 @@ or
 
 1. **Wire up your hardware:**
     - Connect MPU6050 to ESP32 (I2C: default SDA=19, SCL=23 in example)
-2. **Open `QuadCascadeCtrlExt_RM4_v2.ino` in Arduino IDE**
+2. **Open `BasicBodyAttitude.ino` in Arduino IDE**
 3. **Upload to your ESP32**
 4. **Open Serial Monitor** (`115200 baud`)
 5. **Observe output:**
     - Real-time motor PWM values
     - Control loop runs at ~50Hz or can be configured to ~100Hz
 
-> **Note:** The example uses a cascaded PID controller (Attitude + Velocity) and a quadrotor rigid model. Tuning parameters are in the sketch.
+> **Note:** The example uses a cascaded PID controller (Orientation + Rate) and a quadrotor rigid model. Tuning parameters are in the sketch.
 
 ---
 
 ## Environment & Version Matrix
 
-| Component         | Recommended Version | Notes                        |
-|-------------------|--------------------|------------------------------|
-| ESP32 Board Core  | 3.1.0              | Arduino Board Manager        |
-| Arduino IDE       | 1.8.x / 2.x        | PlatformIO also supported    |
-| Firmus SDK        | 1.3.3              | See `README.md`              |
-| MPU6050           | Built-in           | No extra library needed      |
+| Component         | Version      | Notes                        |
+|-------------------|--------------|------------------------------|
+| ESP32 Board Core  | 3.1.0        | Arduino Board Manager        |
+| Arduino IDE       | 1.8.x / 2.x  | PlatformIO **NOT** supported |
+| Firmus SDK        | 1.3.4        | See `README.md`              |
+| MPU6050           | Built-in     | No extra library needed      |
 
 > **Tip:** If you encounter build errors, check your ESP32 core version and board selection first.
 

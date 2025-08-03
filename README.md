@@ -1,170 +1,208 @@
 # Firmus-SDK
 
-**Current stable version: v1.3.3**
-**Pre-Dev version: v1.3.4**
-
-**Runs optimally (and tested) on esp32 boards v3.1.0**
-
-## **Development Features Overview**
-
-The current (stable) release (v1.3.3) runs efficiently on ESP32 boards, but leans more towards support for Cascaded Control systems. For control systems that are more advanced (and thus require a generalized architecture), the `Attitude` — `Velocity` — `Position` -enforced interface is too restricting.
-
-To solve this problem, the base classes (`IAttitude`, `IVelocity`, etc...) will **not** be replaced, but complemented by a set of new classes (e.g. `IControlLayer`) which aim to improve and generalize the control architecture for more high-performance control systems, such as MPC, LQR, NN, and more. A template for these advanced systems will be provided by default in future major versions, but the foundation needs to be appropriate for that to happen. The version `1.3.4` will mainly focus on this feature.
+**Version:** `v1.3.4`  
+**Recommended Board:** ESP32 v3.1.0
 
 ---
 
-## 📘 Introduction
+## Overview
 
-**Firmus** is a high-performance, modular flight control SDK designed with clarity and composability in mind. It was born out of frustration with many popular drone SDKs — tools that offer beautiful syntax and developer-friendly APIs, yet are weighed down by bloated, opaque, and often inefficient internals.
+Firmus is a high-performance, modular flight control SDK built around **clarity**, **composability**, and **physics-accurate modeling**. It offers a clean interface for building both simple cascaded controllers and complex high-level control architectures.
 
-Firmus addresses these shortcomings by offering:
+---
 
-- A fully **composable control stack**, where each layer is modular and interchangeable  
-- **Strict but expressive control templates** that promote robust, deterministic control  
-- **Readable, flow-oriented syntax** that feels intuitive for developers  
-- Support for both experienced control engineers and those who "just want to fly"  
-- **Physics-accurate models and algorithms** grounded in real-world drone dynamics  
+## Key Principles
 
-Firmus is currently built for the **ESP32 platform**, leveraging the Arduino environment for development. Porting to other Arduino-compatible targets (e.g. AVR) is possible with some adaptation to the internals.
+- **Modular Control Layers**  
+  Each controller layer is swappable and composable.
 
-Whether you're building experimental flight software, writing your own controller, or just need a clean and flexible starting point, **Firmus** is designed to help you focus on control — not complexity.
+- **Frame-Level Operation**  
+  All quantities are defined in the body (local) reference frame.
 
-## 🏗️ Architecture Overview
+- **Deterministic Abstractions**  
+  Predictable interfaces, no hidden state.
 
-A High-performance and robust control stack requires a careful set of abstract module layers that reflect the fundamentals of control theory. Below is a visualization of the most basic abstract control flow.
+- **Hardware-Agnostic**  
+  Runs on Arduino ESP32, with future support for STM32 and native C++.
+
+---
+
+## Architecture Summary
 
 ```
-                                                          [Position]
-                   [ Sensor Array ]                      /          \
-[ Sketch (.ino) ] -------------------> [ Orchestrator ] — [Velocity] — -> [ Mixer ] -> [ Output ]
-                   [ Rigid Model ]                       \          /
-                                                          [Attitude]
+[ Sensor Array ]
+      ↓
+[ Rigid Model ] 
+      ↓
+[ Control Layers: Orientation → Rate → ... ]
+      ↓
+[ Final Torque Computation via Model ]
+      ↓
+[ Output (e.g., Mixer, Actuators) ]
 ```
 
-Core interfaces:
-- `IRigidModel` (vehicle dynamics)
-- `IOrchestrator`, `IPosition`, `IVelocity`, `IAttitude` (control layers)
+---
 
-Implementations of interfaces:
-- `RigidModel<N>` (vehicle model by actuators)
-- `Cascade::Orchestrator`, `Position`, `Velocity`, `Attitude` (Cascaded by orchestrator, full filtered PID implementation, rigid body dynamics)
+## Core Interfaces
 
-Other useful assets:
-- `Mixer<N>` (optional, needs to be combined with the rigid model)
-- `mpu6050` and some other built-in, extensive sensors
-- `Matrix2`, `matrix<T, r, c>` along with some allocation utilities — custom, lightweight and robust matrix library. Used a lot by implementations, but not mandatory
-- `Vector3{}` (mandatory, universal spatial vector, used and returned by all abstract systems)
-- `PIDGains{}` (mandatory for PID configuration)
+### `Vector3`
 
-## 🧩 Core SDK Overview
-The Firmus SDK is built on composable and deterministic abstractions. These base interfaces represent the “contract” between major modules and enable layered, flexible control. All interfaces share similar semantics for consistent usage and development.
+3D vector structure for all spatial and angular quantities (position, velocity, orientation, torque, etc).
 
-Each section below describes briefly:
-- **What the iterface/module does**
-- **Its standard public methods**
-- **Implementation notes**
-- **Data conventions and units**
-
-
-
-
-
-### **`IOrchestrator` (Controller/Orchestrator Interface)**
-**Purpose:**
-Computes the desired torque from an interchangeable control set. Combinations can be limited from here. All computations converge toward this point.
-
-**Key Methods:**
 ```cpp
-void useModel(IRigidModel*);
-void usePositionInterface(IPosition*);
-void useVelocityInterface(IVelocity*);
-void useAttitudeInterface(IAttitude*);
-
-Vector3 compute(float dt);
+struct Vector3 {
+    float x, y, z;
+};
 ```
 
-**Conventions/Units:**
-- Returns torques in *Nm*
+### `Snapshot`
 
-**Notes:**
-- The order of controllers can be programmatically changed per orchestrator. The converging properties as well.
+Encapsulates the complete dynamic state of a body at a given moment. Plays a key role in flow-of-data.
 
-
-
-
-
-
-
-### **`IAttitude` (Attitude Controller Interface)**
-**Purpose:**
-Computes the desired angular acceleration for a given attitude.
-
-**Key Methods:**
 ```cpp
-void configureOrientationGains(PIDGains, PIDGains, PIDGains);
-void configureRateGains(PIDGains, PIDGains, PIDGains);
-void setControlFlags(IAttitudeFlags*);
-
-void updateMeasuredOrientation(float x, float y, float z);
-void updateMeasuredRate(float x, float y, float z);
-void configureOrientationTarget(float x, float y, float z);
-void configureRateTarget(float x, float y, float z);
-
-Vector3 compute(float dt);
+struct Snapshot {
+    Vector3 position;
+    Vector3 velocity;
+    Vector3 acceleration;
+    Vector3 orientation;
+    Vector3 angular_velocity;
+    Vector3 angular_acceleration;
+    uint64_t timestamp;
+    uint64_t loop_freq;
+    Vector3 torque;
+};
 ```
 
-**Conventions/Units:**
-- All angles are in *radians*
-- Rate inputs are in *rad/s*
-- When returning torque: `Vector3` in *Nm*
-- When returning angular accelerations: `Vector3` in *rad/s^2*
+---
 
-**Notes:**
-- The typical attitude controller should not compute the torque directly, which is why it is promoted to compute the angular accelerations instead, and compute the final torque via the model. This is to maintain structural integrity, because a controller may not have two major priorities.
+## Modern Control Stack (1.3.4+)
 
+### `IBodyCorrectionPolicy`
 
+Defines the contract for computing corrections between a measured and target vector.
 
-
-
-
-
-
-### **`IVelocity` (Velocity Controller Interface)**
-**Purpose:**
-Computes the required acceleration (Vector3) from a velocity target and current (measured) velocity.
-
-**Key Methods:**
 ```cpp
-void configureVelocityGains(PIDGains, PIDGains, PIDGains);
-void setControlFlags(IVelocityFlags*);
-
-void updateMeasuredVelocity(float x, float y, float z);
-void configureVelocityTarget(float x, float y, float z);
-
-Vector3 compute(float dt);
+Vector3 compute(const Vector3 &target, const Vector3 &measured, float dt);
+void reset();
 ```
 
-**Conventions/Units:**
-- Velocity in *m/s*
-- Acceleration in *m/s^2*
-- Returns **frame-aligned acceleration vector**
+**Examples:** PID, MPC, LQR, NN.
 
-### **`IPosition` (Position Controller Interface)**
-**Purpose:**
-Computes the required velocity (Vector3) from a position target and current (estimated and measured) position.
+---
 
-**Key Methods:**
+### `IBodyControlLayer`
+
+Processes one stage of the control cascade. Applies a correction strategy to produce a new control target.
+
 ```cpp
-void configurePositionGains(PIDGains, PIDGains, PIDGains);
-void setControlFlags(IPositionFlags*);
-
-void updateMeasuredPosition(float x, float y, float z);
-void configurePositionTarget(float x, float y, float z);
-
-Vector3 compute(float dt);
+IBodyControlLayer& setCorrectionPolicy(IBodyCorrectionPolicy*);
+Snapshot process(const Snapshot &state, const Snapshot &target, float dt);
+void reset();
 ```
 
-**Conventions/Units:**
-- Position in *meters*
-- Velocity in *m/s*
-- Returns **frame-aligned velocity vector**
+---
+
+### `IBodyController`
+
+Orchestrates a stack of `IBodyControlLayer`s and computes final torque using a rigid body model.
+
+```cpp
+IBodyController& addControlLayer(IBodyControlLayer*);
+IBodyController& removeControlLayer(IBodyControlLayer*);
+IBodyController& useModel(IRigidModel*);
+Snapshot process(const Snapshot &state, const Snapshot &target, float dt);
+```
+
+---
+
+## Cascade Control Implementation
+
+These implementations provide a default control pipeline using PID-based correction.
+
+### `BodyPIDPolicy`
+
+Implements PID correction on 3 axes independently.
+
+```cpp
+Vector3 compute(const Vector3 &target, const Vector3 &measured, float dt);
+void reset();
+```
+
+- Uses angular wraparound on Z (yaw).
+- Tunable gains per axis.
+- Stateless except for internal PID memory.
+
+---
+
+### `BodyOrientationLayer`
+
+Computes angular velocity from orientation error.
+
+```cpp
+Snapshot process(const Snapshot &state, const Snapshot &target, float dt);
+```
+
+- Assumes orientation vectors in radians.
+- Outputs angular velocity in `Snapshot.angular_velocity`.
+
+---
+
+### `BodyRateLayer`
+
+Computes angular acceleration from angular velocity error.
+
+```cpp
+Snapshot process(const Snapshot &state, const Snapshot &target, float dt);
+```
+
+- Assumes inputs are in `rad/s`.
+- Outputs angular acceleration in `Snapshot.angular_acceleration`.
+
+---
+
+### `BodyController`
+
+Manages control layers and computes torque using the model.
+
+```cpp
+Snapshot process(const Snapshot &state, const Snapshot &target, float dt);
+```
+
+- Applies layers in order.
+- Uses `IRigidModel` to compute torque from angular acceleration.
+
+---
+
+## Legacy Interfaces (Deprecated)
+
+The following are still supported but discouraged:
+
+- `IAttitude`
+- `IVelocity`
+- `IPosition`
+- `IOrchestrator`
+
+Use the new cascade-based structure instead.
+
+---
+
+## Notes
+
+- **All quantities are in SI units**:  
+  - Position: meters  
+  - Velocity: m/s  
+  - Orientation: radians  
+  - Angular rates: rad/s  
+  - Torque: Nm
+
+- **Reset policies** before reusing or switching control modes.
+
+- **Control loop frequency** should be tracked manually using `timestamp` and `loop_freq` in `Snapshot`.
+
+---
+
+## Upcoming Features
+
+- Template implementations for LQR, MPC, and Neural Network controllers.
+- STM32 and native C++ support.
+- Full model introspection and offline simulation tools.

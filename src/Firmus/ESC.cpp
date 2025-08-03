@@ -1,11 +1,10 @@
 /** © 2025 Keshav Haripersad
  *  Basic ESC class header, inherits from ActuatorInterface - ESC.h
  *  | ESC.cpp for logic.
- *  | /Firmus for modules/assets.
  *
  *  Licensed under the Apache 2.0 license (check LICENSE).
  *  Github link: https://github.com/Keshav11-coder/Firmus-SDK
- *  Firmus SDK version: 1.3.3
+ *  Firmus SDK version: 1.3.4
  */
 
 #include "ESC.h"

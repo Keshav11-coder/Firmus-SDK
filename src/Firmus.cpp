@@ -1,11 +1,11 @@
 /** © 2025 Keshav Haripersad
- *  Base API logic - Firmus.cpp
- *  | Check out Firmus.h for an overview.
- *  | Check out files in /Firmus for other modules.
+ *  Base SDK logic - Firmus.cpp
+ *  | Firmus.h for an overview.
+ *  | ~/Firmus for controllers, mixers, tools, models
  *
  *  Licensed under the Apache 2.0 license (check LICENSE).
  *  Github link: https://github.com/Keshav11-coder/Firmus-SDK
- *  Firmus SDK version: 1.3.3
+ *  Firmus SDK version: 1.3.4
  */
 
 // Headers

@@ -1,7 +1,3 @@
-// Input -> torque + thrust
-// Output -> motor thrusts (optional -> motor pwm)
-// Required: model (rigidmodel)
-
 #pragma once
 
 /** © 2025 Keshav Haripersad
@@ -10,13 +6,14 @@
  *
  *  Licensed under the Apache 2.0 license (check LICENSE).
  *  Github link: https://github.com/Keshav11-coder/Firmus-SDK
- *  Firmus SDK version: 1.3.3
+ *  Firmus SDK version: 1.3.4
  */
 
 #include <Arduino.h>
-#include "../Models/Rigid.h" // Include the RigidModel class for model operations
 
-#include "../Assets/matrix2.h" // Include the matrix2 library for matrix operations
+#include "../models/Rigid.h" // Include the RigidModel class for model operations
+
+#include "../tools/matrix2.h" // Include the matrix2 library for matrix operations
 
 struct Vector3; // Forward declaration of Vector3 (Firmus.h for implementation)
 

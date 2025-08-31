@@ -10,7 +10,7 @@
  *  Firmus SDK version: 1.3.4
  */
 
-#include "Assets/sjr_mpu6050.h"
+#include "tools/sjr_mpu6050.h"
 
 class mpu6050
 {

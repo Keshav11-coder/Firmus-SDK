@@ -6,7 +6,7 @@
  *
  *  Licensed under the Apache 2.0 license (check LICENSE).
  *  Github link: https://github.com/Keshav11-coder/Firmus-SDK
- *  Firmus SDK version: 1.3.3
+ *  Firmus SDK version: 1.3.4
  */
 
 #include "Arduino.h"

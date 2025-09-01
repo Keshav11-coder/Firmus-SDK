@@ -4,12 +4,11 @@
 /** © 2025 Keshav Haripersad
  *  Basic ESC class implementation, inherits from ActuatorInterface - ESC.cpp
  *  | ESC.h for overview.
- *  | /Firmus for modules/assets.
  *  | This class was written for typical ESCs, and is not intended for other types of thrusters.
  *
  *  Licensed under the Apache 2.0 license (check LICENSE).
  *  Github link: https://github.com/Keshav11-coder/Firmus-SDK
- *  Firmus SDK version: 1.3.3
+ *  Firmus SDK version: 1.3.4
  */
 
 #include "../Firmus.h" // Include the base API header
@@ -17,7 +16,7 @@
 // Required
 #include <ESP32Servo.h>
 
-class ESC : public Firmus::ActuatorInterface
+class ESC : public ActuatorInterface
 {
 private:
     Servo esc;
@@ -34,7 +33,7 @@ public:
         esc.attach(pin);
     }
 
-    struct failsafe_system : public Firmus::ActuatorInterface::failsafe_system
+    struct failsafe_system : public ActuatorInterface::failsafe_system
     {
     private:
         bool failsafe = false;

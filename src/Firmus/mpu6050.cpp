@@ -1,11 +1,10 @@
 /** © 2025 Keshav Haripersad
  *  Proxy class implementation for SJR mpu6050 class (sjr_mpu6050.h) - mpu6050.cpp
  *  | mpu6050.h for overview.
- *  | /Firmus for modules/assets.
  *
  *  Licensed under the Apache 2.0 license (check LICENSE).
  *  Github link: https://github.com/Keshav11-coder/Firmus-SDK
- *  Firmus SDK version: 1.3.3
+ *  Firmus SDK version: 1.3.4
  */
 
 #include "mpu6050.h"

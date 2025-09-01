@@ -10,7 +10,7 @@
  */
 
 #include <Arduino.h>
-#include "../Assets/matrix2.h" // Include the matrix2 library for matrix operations
+#include "../tools/matrix2.h" // Include the matrix2 library for matrix operations
 
 #include "abstract.h" // Include the abstract model interface
 

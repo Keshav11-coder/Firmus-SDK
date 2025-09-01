@@ -1,34 +1,14 @@
-#ifndef FIRMUS_PID_H
-#define FIRMUS_PID_H
+#ifndef FIRMUS_PIDF_H
+#define FIRMUS_PIDF_H
 
 /** © 2025 Keshav Haripersad
  *  Base PID/PIDf header - pid.h
- *  | pid.cpp for base logic.
  *  | /Firmus for modules/assets.
  *
  *  Licensed under the Apache 2.0 license (check LICENSE).
  *  Github link: https://github.com/Keshav11-coder/Firmus-SDK
- *  Firmus SDK version: 1.3.3
+ *  Firmus SDK version: 1.3.4
  */
-
- // Classic PID
-class PID
-{
-public:
-    PID();
-    void gains(float kp, float ki, float kd);
-    void reset();
-
-    float compute(float dt);
-    float compute(float error, float dt);
-    float compute(float input, float target, float dt);
-
-private:
-    float _kp, _ki, _kd;
-    float _integral;
-    float _lastError;
-    float _input, _target;
-};
 
 // Filtered / Smooth PID
 class PID_filtered
